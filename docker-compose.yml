@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    # Aplikacja nie jest wystawiona przez 'ports' - tylko w sieci Compose
+    environment:
+      # Ścieżka zgodna z domyślną z tabeli
+      DB_PATH: /data/app.db
+    volumes:
+      # Montujemy wolumen tam, gdzie aplikacja spodziewa się bazy
+      - db_data:/data
+    healthcheck:
+      # Używamy dedykowanego endpointu /health z portem 8000
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  proxy:
+    image: nginx:alpine
+    ports:
+      # Jedyne wejście z zewnątrz: 8080 mapowane na 80 Nginxa
+      - "8080:80"
+    volumes:
+      # Plik wmontowany w trybie tylko do odczytu (ro)
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  db_data:

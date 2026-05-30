@@ -1,0 +1,59 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run Linter
+        run: bash scripts/lint.sh
+
+  test:
+    name: Run Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run Tests
+        env:
+          # MAGIA z polecenia: pozwala na poprawne importowanie modułu 'app'
+          PYTHONPATH: ${{ github.workspace }}
+        run: python -m pytest app/tests -v
+
+  build:
+    name: Build Project
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Build Application (Compile Python files)
+        # Kompilacja sprawdzająca błędy składni w całym kodzie, jako krok 'build'
+        run: python -m compileall app/
