@@ -40,7 +40,7 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Run Tests
         env:
-          # MAGIA z polecenia: pozwala na poprawne importowanie modułu 'app'
+          #pozwala na poprawne importowanie modułu 'app'
           PYTHONPATH: ${{ github.workspace }}
         run: python -m pytest app/tests -v
 
